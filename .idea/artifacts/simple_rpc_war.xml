@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="simple-rpc:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="basic.war">
+      <element id="artifact" artifact-name="simple-rpc:war exploded" />
+    </root>
+  </artifact>
+</component>
