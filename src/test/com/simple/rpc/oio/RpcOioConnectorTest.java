@@ -2,6 +2,7 @@ package com.simple.rpc.oio;
 
 import com.simple.rpc.common.RpcObject;
 import com.simple.rpc.oio.client.RpcOioConnector;
+import com.simple.rpc.oio.client.SimpleClientRemoteProxy;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,10 +41,14 @@ public class RpcOioConnectorTest {
     }
 
     public static void main(String[] args) {
-        RpcOioConnector rpcOioConnector = new RpcOioConnector();
-        rpcOioConnector.setHost("127.0.0.1");
-        rpcOioConnector.setPort(5566);
-        rpcOioConnector.startService();
-        rpcOioConnector.sendRpcObject(new RpcObject(1,2,3,"Hello".getBytes()), 1000);
+//        RpcOioConnector rpcOioConnector = new RpcOioConnector();
+//        rpcOioConnector.setHost("127.0.0.1");
+//        rpcOioConnector.setPort(5566);
+//        rpcOioConnector.startService();
+//        rpcOioConnector.sendRpcObject(new RpcObject(1,2,3,"Hello".getBytes()), 1000);
+
+        SimpleClientRemoteProxy proxy = new SimpleClientRemoteProxy();
+        LoginRpcService loginService = proxy.registerRemote(LoginRpcService.class);
+        loginService.login("stephen", "xxx");
     }
 }

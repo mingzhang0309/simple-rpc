@@ -27,6 +27,10 @@ public class RpcUtils {
 
     public static int MEM_1M = MEM_512KB*2;
 
+    public static String DEFAULT_VERSION = "0.0";
+
+    public static String DEFAULT_GROUP = "default";
+
     public static void writeDataRpc(RpcObject rpc, DataOutputStream dos,RpcNetExceptionHandler handler) {
         try {
             dos.writeInt(rpc.getType().getType());
