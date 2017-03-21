@@ -1,16 +1,22 @@
 package com.simple.rpc.common;
 
 import com.simple.rpc.common.exception.RpcException;
+import com.simple.rpc.common.exception.RpcExceptionHandler;
 import com.simple.rpc.oio.client.RpcOioConnector;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by stephen.zhang on 17/3/14.
  */
 public class RpcUtils {
+    private static Map<String, Method> methodCache = new HashMap<String, Method>();
     public static int MEM_8KB = 1024*8;
 
     public static int MEM_16KB = MEM_8KB*2;
@@ -108,6 +114,63 @@ public class RpcUtils {
                 }
             }
             return ONEWAY;
+        }
+    }
+
+    /**
+     * 调用对象的方法执行
+     * @param obj
+     * @param methodName
+     * @param args
+     * @param exceptionHandler
+     * @return
+     */
+    public static Object invokeMethod(Object obj, String methodName,Object[] args,RpcExceptionHandler exceptionHandler) {
+        Class<? extends Object> clazz = obj.getClass();
+        String key = clazz.getCanonicalName() + "." + methodName;
+        Method method = methodCache.get(key);
+        if (method == null) {
+            method = RpcUtils.findMethod(clazz, methodName, args);
+            if (method == null) {
+                throw new RpcException("method not exist method:" + methodName);
+            }
+            methodCache.put(key, method);
+        }
+        return RpcUtils.invoke(method, obj, args,exceptionHandler);
+    }
+
+    public static Method findMethod(Class clazz, String name, Object[] args) {
+        Method[] methods = clazz.getMethods();
+        for (Method m : methods) {
+            if (m.getName().equals(name)) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 调用对象的方法执行
+     * @param method
+     * @param obj
+     * @param args
+     * @param exceptionHandler
+     * @return
+     */
+    public static Object invoke(Method method, Object obj, Object[] args,RpcExceptionHandler exceptionHandler) {
+        try {
+            return method.invoke(obj, args);
+        } catch (IllegalAccessException e) {
+            throw new RpcException("invoke IllegalAccess request access error");
+        } catch (IllegalArgumentException e) {
+            throw new RpcException("invoke IllegalArgument request param wrong");
+        } catch (InvocationTargetException e) {
+            if(e.getCause()!=null){
+                exceptionHandler.handleException(null, null, e.getCause());
+            }else{
+                exceptionHandler.handleException(null, null, e);
+            }
+            throw new RpcException("rpc invoke target error");
         }
     }
 }

@@ -52,6 +52,11 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor {
 
     @Override
     public Object invoke(RemoteCall call) {
+        RpcOioConnector rpcOioConnector = getRpcConnector(call);
+        byte[] buffer = serializer.serialize(call);
+        int length = buffer.length;
+        RpcObject request = new RpcObject(INVOKE,this.genIndex(),length,buffer);
+        rpcOioConnector.sendRpcObject(request, timeout);
         return null;
     }
 
