@@ -3,6 +3,8 @@ package com.simple.rpc.common;
 import com.simple.rpc.common.exception.RpcException;
 import com.simple.rpc.common.exception.RpcExceptionHandler;
 import com.simple.rpc.oio.client.RpcOioConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -16,6 +18,8 @@ import java.util.Map;
  * Created by stephen.zhang on 17/3/14.
  */
 public class RpcUtils {
+    private static final Logger logger = LoggerFactory.getLogger(RpcUtils.class);
+
     private static Map<String, Method> methodCache = new HashMap<String, Method>();
     public static int MEM_8KB = 1024*8;
 
@@ -171,6 +175,14 @@ public class RpcUtils {
                 exceptionHandler.handleException(null, null, e);
             }
             throw new RpcException("rpc invoke target error");
+        }
+    }
+
+    public static void handleException(RpcExceptionHandler rpcExceptionHandler,RpcObject rpc,RemoteCall call,Exception e){
+        if(rpcExceptionHandler!=null){
+            rpcExceptionHandler.handleException(rpc,call,e);
+        }else{
+            logger.error("exceptionHandler null exception message:"+e.getMessage());
         }
     }
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Created by stephen.zhang on 17/3/14.
  */
-public class RpcOioConnector extends AbstractRpcNetwordBase implements Service, RpcNetExceptionHandler {
+public class RpcOioConnector extends RpcNetBase implements Service, RpcSender {
     private static final Logger logger = LoggerFactory.getLogger(RpcOioConnector.class);
 
     private Socket socket;
@@ -105,8 +105,7 @@ public class RpcOioConnector extends AbstractRpcNetwordBase implements Service, 
                     rpc.setHost(remoteHost);
                     rpc.setPort(remotePort);
 //                    rpc.setRpcContext(rpcContext);
-//                    fireCall(rpc);
-                    logger.info("get rpc {}", rpc);
+                    fireCall(rpc);
                 }
                 try {
                     Thread.currentThread().sleep(1000);
@@ -117,6 +116,7 @@ public class RpcOioConnector extends AbstractRpcNetwordBase implements Service, 
         }
     }
 
+    @Override
     public boolean sendRpcObject(RpcObject rpc, int timeout) {
         int cost = 0;
         while(!sendQueueCache.offer(rpc)){
@@ -140,5 +140,8 @@ public class RpcOioConnector extends AbstractRpcNetwordBase implements Service, 
         }
     }
 
+    public void fireCall(final RpcObject rpc){
+        fireCallListeners(rpc, this);
+    }
 
 }

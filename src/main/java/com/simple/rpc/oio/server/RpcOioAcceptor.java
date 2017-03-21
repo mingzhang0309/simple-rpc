@@ -1,8 +1,6 @@
 package com.simple.rpc.oio.server;
 
-import com.simple.rpc.common.AbstractRpcNetwordBase;
-import com.simple.rpc.common.RpcNetExceptionHandler;
-import com.simple.rpc.common.Service;
+import com.simple.rpc.common.*;
 import com.simple.rpc.common.exception.RpcException;
 import com.simple.rpc.oio.client.RpcOioConnector;
 import org.slf4j.Logger;
@@ -12,11 +10,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 /**
  * Created by stephen.zhang on 17/3/14.
  */
-public class RpcOioAcceptor extends AbstractRpcNetwordBase implements Service, RpcNetExceptionHandler {
+public class RpcOioAcceptor extends RpcNetBase implements Service, RpcNetExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(RpcOioAcceptor.class);
 
     private ServerSocket server;
@@ -50,6 +49,7 @@ public class RpcOioAcceptor extends AbstractRpcNetwordBase implements Service, R
                     Socket socket = server.accept();
                     logger.info("接收连接 {}", socket.getRemoteSocketAddress());
                     RpcOioConnector connector = new RpcOioConnector(socket);
+                    RpcOioAcceptor.this.addConnectorListeners(connector);
                     connector.startService();
                 } catch (IOException e) {
                     handleNetException(e);

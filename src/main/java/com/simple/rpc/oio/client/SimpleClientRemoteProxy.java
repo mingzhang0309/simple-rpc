@@ -55,6 +55,7 @@ public class SimpleClientRemoteProxy implements InvocationHandler, Service {
         Class<?> service = method.getDeclaringClass();
         String name = method.getName();
         RemoteCall call = new RemoteCall(service.getName(), name);
+        call.setArgs(args);
         String version = versionCache.get(service);
         if (version != null) {
             call.setVersion(version);
