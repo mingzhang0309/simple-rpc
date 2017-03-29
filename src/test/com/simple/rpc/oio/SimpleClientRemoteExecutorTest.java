@@ -21,6 +21,6 @@ public class SimpleClientRemoteExecutorTest {
         proxy.startService();
 
         LoginRpcService loginService = proxy.registerRemote(LoginRpcService.class);
-        loginService.login("linda", "123456");
+        System.out.println(loginService.login("linda", "123456"));
     }
 }

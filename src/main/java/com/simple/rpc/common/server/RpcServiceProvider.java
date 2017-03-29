@@ -53,7 +53,7 @@ public class RpcServiceProvider implements Service, RpcCallListener {
             executor.oneway(call);
         }
 
-        Object result = executor.invoke(new RemoteCall());
+        Object result = executor.invoke(call);
         rpc.setType(RpcUtils.RpcType.SUC);
         if(result != null) {
             byte[] data = serializer.serialize(result);
