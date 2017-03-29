@@ -1,9 +1,7 @@
 package com.simple.rpc.oio.client;
 
-import com.simple.rpc.common.RemoteCall;
-import com.simple.rpc.common.RemoteExecutor;
-import com.simple.rpc.common.RpcObject;
-import com.simple.rpc.common.Service;
+import com.simple.rpc.common.*;
+import com.simple.rpc.common.exception.RpcException;
 import com.simple.rpc.common.serializer.JdkSerializer;
 import com.simple.rpc.common.serializer.RpcSerializer;
 
@@ -17,10 +15,12 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor {
     private AtomicInteger index = new AtomicInteger(10000);
     protected int timeout = 10000;
     private RpcSerializer serializer;
+    private RpcSync clientRpcSync;
 
     public SimpleClientRemoteExecutor(RpcOioConnector connector) {
         serializer = new JdkSerializer();
         this.connector = connector;
+        clientRpcSync = new SimpleFutureRpcSync();
     }
 
     public RpcOioConnector getConnector() {
@@ -55,8 +55,24 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor {
         RpcOioConnector rpcOioConnector = getRpcConnector(call);
         byte[] buffer = serializer.serialize(call);
         int length = buffer.length;
-        RpcObject request = new RpcObject(INVOKE,this.genIndex(),length,buffer);
+        RpcObject request = new RpcObject(INVOKE, this.genIndex(), length, buffer);
+        RpcCallSync sync = new RpcCallSync(request.getIndex(), request);
         rpcOioConnector.sendRpcObject(request, timeout);
+        clientRpcSync.waitForResult(timeout, sync);
+        RpcObject response = sync.getResponse();
+        if (response == null) {
+            throw new RpcException("null rpc response");
+        }
+        if (response.getType() == RpcUtils.RpcType.FAIL) {
+            String message = "remote rpc call failed";
+            if (response.getLength() > 0) {
+                message = new String(response.getData());
+            }
+            throw new RpcException(message);
+        }
+        if (response.getLength() > 0) {
+            return serializer.deserialize(sync.getResponse().getData());
+        }
         return null;
     }
 

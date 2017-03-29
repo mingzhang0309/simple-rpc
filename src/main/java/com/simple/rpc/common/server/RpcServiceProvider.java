@@ -49,7 +49,22 @@ public class RpcServiceProvider implements Service, RpcCallListener {
 
         logger.info("RpcServiceProvider get rpc message {}", call);
 
-        executor.oneway(call);
+        if(rpc.getType() == RpcUtils.RpcType.ONEWAY) {
+            executor.oneway(call);
+        }
+
+        Object result = executor.invoke(new RemoteCall());
+        rpc.setType(RpcUtils.RpcType.SUC);
+        if(result != null) {
+            byte[] data = serializer.serialize(result);
+            rpc.setLength(data.length);
+            rpc.setData(data);
+        } else {
+            rpc.setLength(0);
+            rpc.setData(new byte[0]);
+        }
+
+        sender.sendRpcObject(rpc, timeout);
     }
 
     public RemoteExecutor getExecutor() {
