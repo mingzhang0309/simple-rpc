@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCallListener {
     private RpcOioConnector connector;
     private AtomicInteger index = new AtomicInteger(10000);
-    protected int timeout = 10000;
+    protected int timeout = 2000;
     private RpcSerializer serializer;
     private RpcSync clientRpcSync;
     private ConcurrentHashMap<String,RpcCallSync> rpcCache = new ConcurrentHashMap<String,RpcCallSync>();

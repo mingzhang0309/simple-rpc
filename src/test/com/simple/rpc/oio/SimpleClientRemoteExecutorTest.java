@@ -16,8 +16,7 @@ public class SimpleClientRemoteExecutorTest {
         connector.setPort(port);
 
         SimpleClientRemoteExecutor executor = new SimpleClientRemoteExecutor(connector);
-        SimpleClientRemoteProxy proxy = new SimpleClientRemoteProxy();
-        proxy.setRemoteExecutor(executor);
+        SimpleClientRemoteProxy proxy = new SimpleClientRemoteProxy(executor);
         proxy.startService();
 
         LoginRpcService loginService = proxy.registerRemote(LoginRpcService.class);

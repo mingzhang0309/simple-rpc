@@ -19,15 +19,12 @@ public class RpcServiceProviderTest {
         RpcOioAcceptor acceptor = new RpcOioAcceptor();
         acceptor.setHost(host);
         acceptor.setPort(port);
-        RpcServiceProvider provider = new RpcServiceProvider();
+        SimpleServerRemoteExecutor simpleServerRemoteExecutor = new SimpleServerRemoteExecutor();
 
-        SimpleServerRemoteExecutor proxy = new SimpleServerRemoteExecutor();
+        RpcServiceProvider provider = new RpcServiceProvider(simpleServerRemoteExecutor);
 
         LoginRpcService loginService = new LoginRpcServiceImpl();
-
-        proxy.registerRemote(LoginRpcService.class, loginService);
-
-        provider.setExecutor(proxy);
+        simpleServerRemoteExecutor.registerRemote(LoginRpcService.class, loginService);
 
         acceptor.addRpcCallListener(provider);
 

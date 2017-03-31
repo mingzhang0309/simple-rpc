@@ -28,6 +28,12 @@ public class RpcServiceProvider implements Service, RpcCallListener {
 
     private RpcExceptionHandler exceptionHandler;
 
+    public RpcServiceProvider(RemoteExecutor executor) {
+        this.executor = executor;
+        serializer = new JdkSerializer();
+        exceptionHandler = new SimpleRpcExceptionHandler();
+    }
+
     public RpcServiceProvider() {
         serializer = new JdkSerializer();
         exceptionHandler = new SimpleRpcExceptionHandler();

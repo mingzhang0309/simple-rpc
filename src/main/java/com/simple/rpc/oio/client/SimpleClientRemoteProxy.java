@@ -18,6 +18,13 @@ public class SimpleClientRemoteProxy implements InvocationHandler, Service {
     private ConcurrentHashMap<Class,String> groupCache = new ConcurrentHashMap<Class,String>();
     private RemoteExecutor remoteExecutor;
 
+    public SimpleClientRemoteProxy() {
+    }
+
+    public SimpleClientRemoteProxy(RemoteExecutor remoteExecutor) {
+        this.remoteExecutor = remoteExecutor;
+    }
+
     public RemoteExecutor getRemoteExecutor() {
         return remoteExecutor;
     }
