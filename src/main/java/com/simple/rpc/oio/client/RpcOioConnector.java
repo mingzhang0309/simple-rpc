@@ -2,6 +2,7 @@ package com.simple.rpc.oio.client;
 
 import com.simple.rpc.common.*;
 import com.simple.rpc.common.exception.RpcException;
+import com.simple.rpc.nio.client.AbstractRpcConnector;
 import com.simple.rpc.oio.SimpleRpcOioWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Created by stephen.zhang on 17/3/14.
  */
-public class RpcOioConnector extends RpcNetBase implements Service, RpcSender {
+public class RpcOioConnector extends AbstractRpcConnector implements RpcSender {
     private static final Logger logger = LoggerFactory.getLogger(RpcOioConnector.class);
 
     private Socket socket;
@@ -77,12 +78,6 @@ public class RpcOioConnector extends RpcNetBase implements Service, RpcSender {
         simpleRpcOioWriter.unRegWrite(this);
     }
 
-    @Override
-    public void handleNetException(Exception e) {
-        logger.error("connector exception", e);
-        this.stopService();
-    }
-
     public DataOutputStream getOutputStream() {
         return dos;
     }
@@ -138,6 +133,11 @@ public class RpcOioConnector extends RpcNetBase implements Service, RpcSender {
         if(simpleRpcOioWriter!=null){
             simpleRpcOioWriter.notifySend(this);
         }
+    }
+
+    @Override
+    public void handleConnectorException(Exception e) {
+
     }
 
     public void fireCall(final RpcObject rpc){

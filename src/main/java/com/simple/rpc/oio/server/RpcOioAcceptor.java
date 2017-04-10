@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Created by stephen.zhang on 17/3/14.
  */
-public class RpcOioAcceptor extends RpcNetBase implements Service, RpcNetExceptionHandler {
+public class RpcOioAcceptor extends RpcNetBase implements RpcNetExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(RpcOioAcceptor.class);
 
     private ServerSocket server;

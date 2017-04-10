@@ -4,6 +4,7 @@ import com.simple.rpc.common.*;
 import com.simple.rpc.common.exception.RpcException;
 import com.simple.rpc.common.serializer.JdkSerializer;
 import com.simple.rpc.common.serializer.RpcSerializer;
+import com.simple.rpc.nio.client.AbstractRpcConnector;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,21 +13,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by stephen.zhang on 17/3/20.
  */
 public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCallListener {
-    private RpcOioConnector connector;
+    private AbstractRpcConnector connector;
     private AtomicInteger index = new AtomicInteger(10000);
     protected int timeout = 2000;
     private RpcSerializer serializer;
     private RpcSync clientRpcSync;
     private ConcurrentHashMap<String,RpcCallSync> rpcCache = new ConcurrentHashMap<String,RpcCallSync>();
 
-    public SimpleClientRemoteExecutor(RpcOioConnector connector) {
+    public SimpleClientRemoteExecutor(AbstractRpcConnector connector) {
         serializer = new JdkSerializer();
         this.connector = connector;
         clientRpcSync = new SimpleFutureRpcSync();
         connector.addRpcCallListener(this);
     }
 
-    public RpcOioConnector getConnector() {
+    public AbstractRpcConnector getConnector() {
         return connector;
     }
 
@@ -46,7 +47,7 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCal
 
     @Override
     public void oneway(RemoteCall call) {
-        RpcOioConnector connector = getRpcConnector(call);
+        AbstractRpcConnector connector = getRpcConnector(call);
         byte[] buffer = serializer.serialize(call);
         int length = buffer.length;
         RpcObject rpc = new RpcObject(ONEWAY, this.genIndex(), length, buffer);
@@ -55,7 +56,7 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCal
 
     @Override
     public Object invoke(RemoteCall call) {
-        RpcOioConnector rpcOioConnector = getRpcConnector(call);
+        AbstractRpcConnector rpcOioConnector = getRpcConnector(call);
         byte[] buffer = serializer.serialize(call);
         int length = buffer.length;
         RpcObject request = new RpcObject(INVOKE, this.genIndex(), length, buffer);
@@ -88,7 +89,7 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCal
         return index.getAndIncrement();
     }
 
-    public RpcOioConnector getRpcConnector(RemoteCall call) {
+    public AbstractRpcConnector getRpcConnector(RemoteCall call) {
         return connector;
     }
 
