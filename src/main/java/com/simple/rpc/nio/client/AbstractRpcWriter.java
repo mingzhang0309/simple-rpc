@@ -59,17 +59,17 @@ public abstract class AbstractRpcWriter implements Service,RpcOutputNofity {
         public void run() {
             boolean hasSend = false;
             logger.info("nio common send service start");
-            while(!stop){
+            while (!stop) {
                 try {
-                    for(AbstractRpcConnector connector:connectors){
+                    for (AbstractRpcConnector connector : connectors) {
                         hasSend |= doSend(connector);
                     }
-                    if(!hasSend){
+                    if (!hasSend) {
                         Thread.currentThread().sleep(interval);
                     }
                     hasSend = false;
                 } catch (InterruptedException e) {
-                    //notify to send
+                    // notify to send
                 }
             }
         }

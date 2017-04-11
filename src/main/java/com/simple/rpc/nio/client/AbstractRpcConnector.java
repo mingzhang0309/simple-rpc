@@ -72,14 +72,14 @@ public abstract class AbstractRpcConnector extends RpcNetBase implements Service
     @Override
     public boolean sendRpcObject(RpcObject rpc, int timeout) {
         int cost = 0;
-        while(!sendQueueCache.offer(rpc)){
-            cost +=3;
+        while (!sendQueueCache.offer(rpc)) {
+            cost += 3;
             try {
                 Thread.currentThread().sleep(3);
             } catch (InterruptedException e) {
                 throw new RpcException(e);
             }
-            if(timeout>0&&cost>timeout){
+            if (timeout > 0 && cost > timeout) {
                 throw new RpcException("request time out");
             }
         }
