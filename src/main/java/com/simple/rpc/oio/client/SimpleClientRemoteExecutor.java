@@ -56,13 +56,13 @@ public class SimpleClientRemoteExecutor implements Service,RemoteExecutor,RpcCal
 
     @Override
     public Object invoke(RemoteCall call) {
-        AbstractRpcConnector rpcOioConnector = getRpcConnector(call);
+        AbstractRpcConnector rpcConnector = getRpcConnector(call);
         byte[] buffer = serializer.serialize(call);
         int length = buffer.length;
         RpcObject request = new RpcObject(INVOKE, this.genIndex(), length, buffer);
         RpcCallSync sync = new RpcCallSync(request.getIndex(), request);
         rpcCache.put(this.genRpcCallCacheKey(request.getThreadId(), request.getIndex()), sync);
-        rpcOioConnector.sendRpcObject(request, timeout);
+        rpcConnector.sendRpcObject(request, timeout);
         clientRpcSync.waitForResult(timeout, sync);
         RpcObject response = sync.getResponse();
         if (response == null) {

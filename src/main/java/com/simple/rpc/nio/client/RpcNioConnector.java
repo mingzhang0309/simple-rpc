@@ -56,11 +56,6 @@ public class RpcNioConnector extends AbstractRpcConnector {
     }
 
     @Override
-    public boolean sendRpcObject(RpcObject rpc, int timeout) {
-        return false;
-    }
-
-    @Override
     public void startService() {
         try{
             if(channel==null){
