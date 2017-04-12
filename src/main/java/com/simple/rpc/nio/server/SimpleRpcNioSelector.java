@@ -31,12 +31,15 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     private LinkedList<Runnable> selectTasks = new LinkedList<Runnable>();
     private ConcurrentHashMap<SocketChannel, RpcNioConnector> connectorCache;
     private ConcurrentHashMap<ServerSocketChannel, RpcNioAcceptor> acceptorCache;
+    private List<RpcNioAcceptor> acceptors;
 
     public SimpleRpcNioSelector() {
         try {
             selector = Selector.open();
             connectors = new CopyOnWriteArrayList<RpcNioConnector>();
             connectorCache = new ConcurrentHashMap<SocketChannel, RpcNioConnector>();
+            acceptorCache = new ConcurrentHashMap<ServerSocketChannel, RpcNioAcceptor>();
+            acceptors = new CopyOnWriteArrayList<RpcNioAcceptor>();
         } catch (IOException e) {
             throw new RpcException(e);
         }
@@ -55,6 +58,8 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
             }
         });
         this.notifySend(null);
+        acceptorCache.put(acceptor.getServerSocketChannel(), acceptor);
+        acceptors.add(acceptor);
     }
 
     @Override
@@ -75,6 +80,9 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
         });
         connectors.add(connector);
         connectorCache.put(connector.getChannel(), connector);
+        if (connector.getAcceptor() != null) {
+            connector.getAcceptor().addConnectorListeners(connector);
+        }
     }
 
     private void addSelectTask(Runnable task) {
@@ -196,7 +204,7 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     private boolean doAccept(SelectionKey selectionKey) {
         logger.info("selectionKey accept {}", selectionKey);
         ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
-        // RpcNioAcceptor acceptor = acceptorCache.get(server);
+        RpcNioAcceptor acceptor = acceptorCache.get(serverSocketChannel);
         try {
             SocketChannel client = serverSocketChannel.accept();
             if (client != null) {
@@ -210,7 +218,7 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
                 // connector.startService();
                 // }else{
                 RpcNioConnector connector = new RpcNioConnector(client, this);
-                // connector.setAcceptor(acceptor);
+                connector.setAcceptor(acceptor);
                 // connector.setExecutorService(acceptor.getExecutorService());
                 // connector.setExecutorSharable(true);
                 this.register(connector);

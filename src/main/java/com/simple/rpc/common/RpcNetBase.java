@@ -1,5 +1,6 @@
 package com.simple.rpc.common;
 
+import com.simple.rpc.nio.client.AbstractRpcConnector;
 import com.simple.rpc.oio.client.RpcOioConnector;
 
 import java.util.LinkedList;
@@ -51,7 +52,7 @@ public abstract class RpcNetBase extends AbstractRpcNetworkBase implements RpcNe
         }
     }
 
-    public void addConnectorListeners(RpcOioConnector connector) {
+    public void addConnectorListeners(AbstractRpcConnector connector) {
         for (RpcCallListener listener : callListeners) {
             connector.addRpcCallListener(listener);
         }

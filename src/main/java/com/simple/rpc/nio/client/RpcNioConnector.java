@@ -29,6 +29,8 @@ public class RpcNioConnector extends AbstractRpcConnector {
     private RpcNioBuffer rpcNioReadBuffer;
     private RpcNioBuffer rpcNioWriteBuffer;
 
+    private RpcNioAcceptor acceptor;
+
     public RpcNioConnector(){
         this(null);
     }
@@ -143,5 +145,13 @@ public class RpcNioConnector extends AbstractRpcConnector {
     public void handleConnectorException(Exception e) {
         logger.error("connector "+this.getHost()+":"+this.getPort()+" io exception start to shutdown");
         this.stopService();
+    }
+
+    public RpcNioAcceptor getAcceptor() {
+        return acceptor;
+    }
+
+    public void setAcceptor(RpcNioAcceptor acceptor) {
+        this.acceptor = acceptor;
     }
 }
