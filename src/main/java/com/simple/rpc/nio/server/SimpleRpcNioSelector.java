@@ -46,12 +46,15 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
 
     @Override
     public void register(RpcNioConnector connector) {
-
+        try {
+            SelectionKey selectionKey = connector.getChannel().register(selector,SelectionKey.OP_READ);
+        } catch (ClosedChannelException e) {
+            connector.handleNetException(e);
+        }
     }
 
     @Override
     public void unRegister(RpcNioConnector connector) {
-
     }
 
     @Override
@@ -82,9 +85,6 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
         public void run() {
             logger.info("select thread has started :"+Thread.currentThread().getId());
             while (!stop.get()) {
-//                if(SimpleRpcNioSelector.this.hasTask()){
-//                    SimpleRpcNioSelector.this.runSelectTasks();
-//                }
                 boolean needSend = checkSend();
                 try {
                     if (needSend) {

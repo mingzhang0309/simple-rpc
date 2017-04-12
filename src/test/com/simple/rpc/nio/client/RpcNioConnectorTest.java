@@ -1,5 +1,7 @@
 package com.simple.rpc.nio.client;
 
+import com.simple.rpc.nio.server.AbstractRpcNioSelector;
+import com.simple.rpc.nio.server.SimpleRpcNioSelector;
 import com.simple.rpc.oio.LoginRpcService;
 import com.simple.rpc.oio.client.SimpleClientRemoteExecutor;
 import com.simple.rpc.oio.client.SimpleClientRemoteProxy;
@@ -10,7 +12,8 @@ public class RpcNioConnectorTest {
     public static void main(String[] args) {
         String host = "127.0.0.1";
         int port = 4332;
-        AbstractRpcConnector connector = new RpcNioConnector(null);
+        AbstractRpcNioSelector selector = new SimpleRpcNioSelector();
+        AbstractRpcConnector connector = new RpcNioConnector(selector);
         connector.setHost(host);
         connector.setPort(port);
 
