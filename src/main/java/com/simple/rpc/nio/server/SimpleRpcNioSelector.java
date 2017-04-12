@@ -29,8 +29,8 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     private Selector selector;
     private List<RpcNioConnector> connectors;
     private LinkedList<Runnable> selectTasks = new LinkedList<Runnable>();
-    private ConcurrentHashMap<SocketChannel,RpcNioConnector> connectorCache;
-    private ConcurrentHashMap<ServerSocketChannel,RpcNioAcceptor> acceptorCache;
+    private ConcurrentHashMap<SocketChannel, RpcNioConnector> connectorCache;
+    private ConcurrentHashMap<ServerSocketChannel, RpcNioAcceptor> acceptorCache;
 
     public SimpleRpcNioSelector() {
         try {
@@ -77,18 +77,18 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
         connectorCache.put(connector.getChannel(), connector);
     }
 
-    private void addSelectTask(Runnable task){
+    private void addSelectTask(Runnable task) {
         selectTasks.offer(task);
     }
 
-    private boolean hasTask(){
+    private boolean hasTask() {
         Runnable peek = selectTasks.peek();
-        return peek!=null;
+        return peek != null;
     }
 
-    private void runSelectTasks(){
+    private void runSelectTasks() {
         Runnable peek = selectTasks.peek();
-        while(peek!=null){
+        while (peek != null) {
             peek = selectTasks.pop();
             peek.run();
             peek = selectTasks.peek();
@@ -111,7 +111,7 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
 
     @Override
     public void startService() {
-        if(!started.get()) {
+        if (!started.get()) {
             new SelectionThread("selection thread").start();
             started.set(true);
         }
@@ -129,9 +129,9 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
 
         @Override
         public void run() {
-            logger.info("select thread has started :"+Thread.currentThread().getId());
+            logger.info("select thread has started :" + Thread.currentThread().getId());
             while (!stop.get()) {
-                if(SimpleRpcNioSelector.this.hasTask()){
+                if (SimpleRpcNioSelector.this.hasTask()) {
                     logger.info("run task");
                     SimpleRpcNioSelector.this.runSelectTasks();
                 } else {
@@ -157,69 +157,74 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
         }
     }
 
-    private boolean checkSend(){
+    private boolean checkSend() {
         boolean needSend = false;
         for (RpcNioConnector connector : connectors) {
             if (connector.isNeedToSend()) {
                 SelectionKey selectionKey = connector.getChannel().keyFor(selector);
-                selectionKey.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+                selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                 needSend = true;
             }
         }
         return needSend;
     }
 
-    private boolean doDispatchSelectionKey(SelectionKey selectionKey){
-        logger.info("selectionKey {}", selectionKey);
+    private boolean doDispatchSelectionKey(SelectionKey selectionKey) {
         boolean result = false;
-        try{
+        try {
             if (selectionKey.isAcceptable()) {
+                logger.info("selectionKey acceptable {}", selectionKey);
                 result = doAccept(selectionKey);
             }
+            if (selectionKey.isConnectable()) {
+                logger.info("selectionKey connectable {}", selectionKey);
+            }
             if (selectionKey.isReadable()) {
+                logger.info("selectionKey readable {}", selectionKey);
                 result = doRead(selectionKey);
             }
-//            if (selectionKey.isWritable()) {
-//                result = doWrite(selectionKey);
-//            }
-        }catch(Exception e){
+            if (selectionKey.isWritable()) {
+                logger.info("selectionKey writable {}", selectionKey);
+                result = doWrite(selectionKey);
+            }
+        } catch (Exception e) {
             this.handSelectionKeyException(selectionKey, e);
         }
         return result;
     }
 
-    private boolean doAccept(SelectionKey selectionKey){
+    private boolean doAccept(SelectionKey selectionKey) {
         logger.info("selectionKey accept {}", selectionKey);
-        ServerSocketChannel serverSocketChannel = (ServerSocketChannel)selectionKey.channel();
-//        RpcNioAcceptor acceptor = acceptorCache.get(server);
-        try{
+        ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
+        // RpcNioAcceptor acceptor = acceptorCache.get(server);
+        try {
             SocketChannel client = serverSocketChannel.accept();
-            if(client!=null){
+            if (client != null) {
                 client.configureBlocking(false);
-//                if(delegageSelector!=null){
-//                    RpcNioConnector connector = new RpcNioConnector(client,delegageSelector);
-//                    connector.setAcceptor(acceptor);
-//                    connector.setExecutorService(acceptor.getExecutorService());
-//                    connector.setExecutorSharable(true);
-//                    delegageSelector.register(connector);
-//                    connector.startService();
-//                }else{
+                // if(delegageSelector!=null){
+                // RpcNioConnector connector = new RpcNioConnector(client,delegageSelector);
+                // connector.setAcceptor(acceptor);
+                // connector.setExecutorService(acceptor.getExecutorService());
+                // connector.setExecutorSharable(true);
+                // delegageSelector.register(connector);
+                // connector.startService();
+                // }else{
                 RpcNioConnector connector = new RpcNioConnector(client, this);
                 // connector.setAcceptor(acceptor);
                 // connector.setExecutorService(acceptor.getExecutorService());
                 // connector.setExecutorSharable(true);
                 this.register(connector);
                 connector.startService();
-//                }
+                // }
                 return true;
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             this.handSelectionKeyException(selectionKey, e);
         }
         return false;
     }
 
-    private boolean doRead(SelectionKey selectionKey){
+    private boolean doRead(SelectionKey selectionKey) {
         logger.info("selectionKey read {}", selectionKey);
         boolean result = false;
         SocketChannel client = (SocketChannel) selectionKey.channel();
@@ -238,6 +243,7 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
                         channelReadBuf.clear();
                         while (connectorReadBuf.hasRpcObject()) {
                             RpcObject rpc = connectorReadBuf.readRpcObject();
+                            logger.info("get rpcObject {}", rpc);
                             this.fireRpc(connector, rpc);
                         }
                     }
@@ -255,24 +261,57 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
         return result;
     }
 
-    private void handSelectionKeyException(final SelectionKey selectionKey,Exception e){
+    private boolean doWrite(SelectionKey selectionKey) {
+        boolean result = false;
+        SocketChannel channel = (SocketChannel) selectionKey.channel();
+        RpcNioConnector connector = connectorCache.get(channel);
+        if (connector.isNeedToSend()) {
+            try {
+                RpcNioBuffer connectorWriteBuf = connector.getRpcNioWriteBuffer();
+                ByteBuffer channelWriteBuf = connector.getChannelWriteBuffer();
+                while (connector.isNeedToSend()) {
+                    RpcObject rpc = connector.getToSend();
+                    connectorWriteBuf.writeRpcObject(rpc);
+                    channelWriteBuf.put(connectorWriteBuf.readBytes());
+                    channelWriteBuf.flip();
+                    int wantWrite = channelWriteBuf.limit() - channelWriteBuf.position();
+                    int write = 0;
+                    while (write < wantWrite) {
+                        write += channel.write(channelWriteBuf);
+                    }
+                    channelWriteBuf.clear();
+                    result = true;
+                }
+                if (!connector.isNeedToSend()) {
+                    selectionKey.interestOps(SelectionKey.OP_READ);
+                }
+            } catch (Exception e) {
+                this.handSelectionKeyException(selectionKey, e);
+            }
+        }
+        return result;
+    }
+
+    private void handSelectionKeyException(final SelectionKey selectionKey, Exception e) {
         SelectableChannel channel = selectionKey.channel();
-        if(channel instanceof ServerSocketChannel){
+        if (channel instanceof ServerSocketChannel) {
             RpcNioAcceptor acceptor = acceptorCache.get(channel);
-            if(acceptor!=null){
-                logger.error("acceptor " + acceptor.getHost() + ":" + acceptor.getPort() + " selection error " + e.getClass() + " " + e.getMessage() + " start to shutdown");
+            if (acceptor != null) {
+                logger.error("acceptor " + acceptor.getHost() + ":" + acceptor.getPort() + " selection error "
+                        + e.getClass() + " " + e.getMessage() + " start to shutdown");
                 acceptor.stopService();
             }
-        }else{
+        } else {
             RpcNioConnector connector = connectorCache.get(channel);
-            if(connector!=null){
-                logger.error("connector " + connector.getHost() + ":" + connector.getPort() + " selection error " + e.getClass() + " " + e.getMessage() + " start to shutdown");
+            if (connector != null) {
+                logger.error("connector " + connector.getHost() + ":" + connector.getPort() + " selection error "
+                        + e.getClass() + " " + e.getMessage() + " start to shutdown");
                 connector.stopService();
             }
         }
     }
 
-    private void fireRpc(RpcNioConnector connector,RpcObject rpc){
+    private void fireRpc(RpcNioConnector connector, RpcObject rpc) {
         rpc.setHost(connector.getRemoteHost());
         rpc.setPort(connector.getRemotePort());
         rpc.setRpcContext(connector.getRpcContext());
