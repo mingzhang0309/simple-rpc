@@ -58,12 +58,13 @@ public class RpcNioConnector extends AbstractRpcConnector {
     @Override
     public void startService() {
         try{
-            if(channel==null){
+            if (channel == null) {
                 channel = SocketChannel.open();
-                channel.connect(new InetSocketAddress(this.getHost(),this.getPort()));
+                channel.connect(new InetSocketAddress(this.getHost(), this.getPort()));
                 channel.configureBlocking(false);
-                while(!channel.isConnected());
-                logger.info("connect to "+this.getHost()+":"+this.getPort()+" success");
+                while (!channel.isConnected())
+                    ;
+                logger.info("connect to " + this.getHost() + ":" + this.getPort() + " success");
                 selector.startService();
                 selector.register(this);
             }

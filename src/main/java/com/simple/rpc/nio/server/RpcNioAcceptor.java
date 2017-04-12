@@ -69,4 +69,8 @@ public class RpcNioAcceptor extends AbstractRpcAcceptor {
         this.stopService();
         throw new RpcException(e);
     }
+
+    public ServerSocketChannel getServerSocketChannel() {
+        return serverSocketChannel;
+    }
 }
