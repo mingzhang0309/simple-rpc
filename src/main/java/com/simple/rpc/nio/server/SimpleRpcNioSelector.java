@@ -11,6 +11,7 @@ import java.nio.channels.*;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -29,6 +30,7 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     public SimpleRpcNioSelector() {
         try {
             selector = Selector.open();
+            connectors = new CopyOnWriteArrayList<RpcNioConnector>();
         } catch (IOException e) {
             throw new RpcException(e);
         }
@@ -106,11 +108,11 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     private boolean checkSend(){
         boolean needSend = false;
         for (RpcNioConnector connector : connectors) {
-//            if (connector.isNeedToSend()) {
-//                SelectionKey selectionKey = connector.getChannel().keyFor(selector);
-//                selectionKey.interestOps(READ_WRITE_OP);
-//                needSend = true;
-//            }
+            if (connector.isNeedToSend()) {
+                SelectionKey selectionKey = connector.getChannel().keyFor(selector);
+                selectionKey.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+                needSend = true;
+            }
         }
         return needSend;
     }
@@ -118,9 +120,9 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
     private boolean doDispatchSelectionKey(SelectionKey selectionKey){
         boolean result = false;
         try{
-//            if (selectionKey.isAcceptable()) {
-//                result = doAccept(selectionKey);
-//            }
+            if (selectionKey.isAcceptable()) {
+                result = doAccept(selectionKey);
+            }
 //            if (selectionKey.isReadable()) {
 //                result = doRead(selectionKey);
 //            }
@@ -131,6 +133,37 @@ public class SimpleRpcNioSelector extends AbstractRpcNioSelector {
             this.handSelectionKeyException(selectionKey, e);
         }
         return result;
+    }
+
+    private boolean doAccept(SelectionKey selectionKey){
+        logger.info("selectionKey {}", selectionKey);
+        ServerSocketChannel server = (ServerSocketChannel)selectionKey.channel();
+//        RpcNioAcceptor acceptor = acceptorCache.get(server);
+        try{
+            SocketChannel client = server.accept();
+            if(client!=null){
+                client.configureBlocking(false);
+//                if(delegageSelector!=null){
+//                    RpcNioConnector connector = new RpcNioConnector(client,delegageSelector);
+//                    connector.setAcceptor(acceptor);
+//                    connector.setExecutorService(acceptor.getExecutorService());
+//                    connector.setExecutorSharable(true);
+//                    delegageSelector.register(connector);
+//                    connector.startService();
+//                }else{
+                RpcNioConnector connector = new RpcNioConnector(client, this);
+                // connector.setAcceptor(acceptor);
+                // connector.setExecutorService(acceptor.getExecutorService());
+                // connector.setExecutorSharable(true);
+                this.register(connector);
+                connector.startService();
+//                }
+                return true;
+            }
+        }catch(Exception e){
+            this.handSelectionKeyException(selectionKey, e);
+        }
+        return false;
     }
 
     private void handSelectionKeyException(final SelectionKey selectionKey,Exception e){

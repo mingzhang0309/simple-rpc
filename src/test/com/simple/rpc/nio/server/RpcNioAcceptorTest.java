@@ -15,7 +15,8 @@ public class RpcNioAcceptorTest {
         String host = "127.0.0.1";
         int port = 4332;
 
-        AbstractRpcAcceptor acceptor = new RpcNioAcceptor();
+        AbstractRpcNioSelector selector = new SimpleRpcNioSelector();
+        AbstractRpcAcceptor acceptor = new RpcNioAcceptor(selector);
         acceptor.setHost(host);
         acceptor.setPort(port);
 
