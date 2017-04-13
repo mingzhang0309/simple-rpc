@@ -88,7 +88,7 @@ public abstract class AbstractRpcConnector extends RpcNetBase implements Service
     }
 
     public void notifySend(){
-        if(rpcWriter!=null){
+        if (rpcWriter != null) {
             rpcWriter.notifySend(this);
         }
     }
